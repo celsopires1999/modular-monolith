@@ -1,6 +1,7 @@
 using FC4.HotelReservation.Shared.Application;
 using FC4.HotelReservation.Shared.Domain;
 using MediatR;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FC4.HotelReservation.Shared.Infrastructure;
 
@@ -9,6 +10,8 @@ public class UnitOfWork(
     IPublisher publisher
     ) : IUnitOfWork
 {
+    private readonly IDbContextTransaction _transaction = dbContext.Database.BeginTransaction();
+
     public async Task CommitAsync(CancellationToken cancellationToken)
     {
         var aggregateRoots = dbContext
@@ -29,5 +32,7 @@ public class UnitOfWork(
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
+        await _transaction.CommitAsync(cancellationToken);
+        await _transaction.DisposeAsync();
     }
 }
