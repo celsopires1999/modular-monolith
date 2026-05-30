@@ -1,0 +1,17 @@
+{
+  "editor.inlayHints.enabled": "offUnlessPressed",
+
+  // Ativa as dicas para C# e .NET em geral
+  "csharp.inlayHints.enableInlayHintsForImplicitVariableTypes": true,
+  "csharp.inlayHints.enableInlayHintsForTypes": true,
+  "dotnet.inlayHints.enableInlayHintsForVariables": true,
+  "dotnet.inlayHints.enableInlayHintsForTypes": true,
+
+  // O PULO DO GATO PARA O LINQ: Ativa tipos em Lambdas e Expressões ocultas
+  "csharp.inlayHints.enableInlayHintsForLambdaParameterTypes": true,
+  "dotnet.inlayHints.enableInlayHintsForLambdaParameterTypes": true,
+  "csharp.inlayHints.enableInlayHintsForImplicitObjectCreation": true,
+  
+  // Mostra os tipos retornados por métodos encadeados
+  "dotnet.inlayHints.enableInlayHintsForMethodReturnTypes": true
+}
