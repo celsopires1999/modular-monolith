@@ -1,0 +1,38 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS dev
+
+ARG USER_UID=1000
+ARG USER_GID=1000
+ARG DOCKER_GROUP_ID=999
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates curl && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    docker-buildx-plugin \
+    docker-ce-cli \
+    docker-compose-plugin \
+    git \
+    gpg \
+    gpg-agent \
+    gnupg \
+    libpq-dev \
+    libssl-dev \
+    pkg-config \
+    socat && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid $USER_GID developer && \
+    useradd --uid $USER_UID --gid $USER_GID --create-home --shell /bin/bash developer && \
+    groupadd -f -g ${DOCKER_GROUP_ID} docker && \
+    usermod -aG docker developer
+
+USER developer
+
+WORKDIR /home/developer/app
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

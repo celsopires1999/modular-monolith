@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - USER_UID=${UID:-1000}
+        - USER_GID=${GID:-1000}
+        - DOCKER_GROUP_ID=${DOCKER_GROUP_ID:-999}
+    volumes:
+      - .:/home/developer/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    tty: true
+
+  postgres:
+        image: postgres:16
+        container_name: postgres-hotel
+        environment:
+            POSTGRES_DB: hotel_reservation
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: Test1234
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+    
+  mongodb:
+        image: mongo:7
+        environment:
+            MONGO_INITDB_DATABASE: hotel_reservation
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongodb_data:/data/db
+            - ./mongo-init:/docker-entrypoint-initdb.d:ro
+
+  mongo-express:
+        image: mongo-express:latest
+        ports:
+            - "8082:8081"
+        depends_on:
+            - mongodb
+        environment:
+            ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+            ME_CONFIG_BASICAUTH: "false"
+
+volumes:
+    postgres_data:
+    mongodb_data:

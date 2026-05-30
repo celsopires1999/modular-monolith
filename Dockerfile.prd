@@ -1,0 +1,112 @@
+# Multi-stage Dockerfile optimized for Azure production deployment
+# .NET 8.0 Calculator API
+# 
+# Usage: docker build -f Dockerfile.prd -t helloworld-api:latest .
+# Run:   docker run -p 8080:8080 helloworld-api:latest
+
+# ============================================================================
+# STAGE 1: Builder - Compile and publish optimized application
+# ============================================================================
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
+
+# Set working directory for build
+WORKDIR /src
+
+# Copy solution and project files
+COPY ["HelloWorldSolution.sln", "."]
+COPY ["src/HelloWorld.Api/HelloWorld.Api.csproj", "src/HelloWorld.Api/"]
+COPY ["src/HelloWorld.Core/HelloWorld.Core.csproj", "src/HelloWorld.Core/"]
+COPY ["tests/HelloWorld.Tests/HelloWorld.Tests.csproj", "tests/HelloWorld.Tests/"]
+
+# Restore dependencies for Linux runtime
+# Important: specify --runtime linux-x64 to restore correct package assets
+RUN dotnet restore "HelloWorldSolution.sln" --runtime linux-x64
+
+# Copy all source code
+COPY . .
+
+# Publish with optimization for production
+# PublishReadyToRun: Pre-compile assemblies for faster startup
+# SelfContained: false - use shared runtime (smaller image, ~100-150MB final)
+# Configuration: Release mode
+# RuntimeIdentifier: linux-x64 - must match the restore platform
+RUN dotnet publish "./src/HelloWorld.Api/HelloWorld.Api.csproj" \
+    -c Release \
+    -o /app/publish \
+    /p:RuntimeIdentifier=linux-x64 \
+    /p:PublishReadyToRun=true \
+    /p:SelfContained=false
+
+# ============================================================================
+# STAGE 2: Runtime - Minimal production image with only runtime
+# ============================================================================
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+
+# Set labels for Azure Container Registry metadata
+LABEL description="HelloWorld API - .NET 8.0 Calculator Service" \
+      version="1.0" \
+      maintainer="your-team@company.com"
+
+# Create non-root user for security best practices
+# Azure and Docker recommend running containers as non-root
+
+RUN groupadd -g 1000 appuser && \
+    useradd -u 1000 -g appuser -m appuser
+
+# Set working directory
+WORKDIR /app
+
+# Copy published application from builder stage
+COPY --from=builder /app/publish .
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port for the application
+# Azure Container Instances uses 8080 as default
+EXPOSE 8080
+
+# ============================================================================
+# Environment Variables (configure via Azure Container Instances or CI/CD)
+# ============================================================================
+# ASPNETCORE_ENVIRONMENT: Set to "Production" in Azure
+#   ENV ASPNETCORE_ENVIRONMENT=Production
+#
+# ASPNETCORE_URLS: HTTP binding (default: http://+:8080)
+#   ENV ASPNETCORE_URLS=http://+:8080
+#
+# Application Insights (optional for monitoring)
+#   ENV APPLICATIONINSIGHTS_CONNECTION_STRING=your-connection-string
+#
+# Custom logging level
+#   ENV Logging__LogLevel__Default=Information
+#
+# All above can be set at runtime: docker run -e VAR=VALUE
+
+ENV ASPNETCORE_URLS=http://+:8080
+
+# ============================================================================
+# Health Check (for Azure Container Instances orchestration)
+# ============================================================================
+# Azure will use this to determine if container is healthy
+# GET endpoint should return 200 before health endpoint is added to Program.cs
+# For now, basic TCP check works
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+# ============================================================================
+# Entry Point
+# ============================================================================
+# Run the application
+ENTRYPOINT ["dotnet", "HelloWorld.Api.dll"]
+
+# ============================================================================
+# Build-time example: docker build -f Dockerfile.prd -t helloworld-api:latest .
+# Run-time example with environment:
+#   docker run \
+#     -p 8080:8080 \
+#     -e ASPNETCORE_ENVIRONMENT=Production \
+#     -e Logging__LogLevel__Default=Information \
+#     helloworld-api:latest
+# ============================================================================
