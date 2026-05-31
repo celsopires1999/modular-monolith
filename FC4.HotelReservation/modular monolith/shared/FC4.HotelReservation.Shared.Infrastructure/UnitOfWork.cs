@@ -1,6 +1,8 @@
 using FC4.HotelReservation.Shared.Application;
+using FC4.HotelReservation.Shared.Application.Exceptions;
 using FC4.HotelReservation.Shared.Domain;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace FC4.HotelReservation.Shared.Infrastructure;
@@ -31,8 +33,28 @@ public class UnitOfWork(
             }
         }
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await _transaction.CommitAsync(cancellationToken);
-        await _transaction.DisposeAsync();
+        var versionedEntries = dbContext
+            .ChangeTracker
+            .Entries<IVersioned>()
+            .Where(entry => entry.State == EntityState.Modified)
+            .ToList();
+
+        foreach (var entry in versionedEntries)
+            entry.Property(nameof(IVersioned.Version)).CurrentValue = entry.Entity.Version + 1;
+
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await _transaction.CommitAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            
+            throw new ConflictException("A concurrency conflict occurred while saving changes to the database.", ex);
+        }
+        finally
+        {
+            await _transaction.DisposeAsync();
+        }
     }
 }

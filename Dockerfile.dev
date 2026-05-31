@@ -35,4 +35,8 @@ USER developer
 
 WORKDIR /home/developer/app
 
+# Ensure dotnet global tools are on PATH and install dotnet-ef for migrations
+ENV PATH="/home/developer/.dotnet/tools:${PATH}"
+RUN dotnet tool install --global dotnet-ef || true
+
 ENTRYPOINT ["tail", "-f", "/dev/null"]
