@@ -1,17 +1,17 @@
 using System.Net;
 using System.Net.Http.Json;
 using FC4.HotelReservation.Payments.Domain.Enums;
-using FC4.HotelReservation.Reservations.Application.UseCases.Reservation.CreateReservation;
 using FC4.HotelReservation.Reservations.Domain.ValueObjects;
 using FluentAssertions;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.CreateReservationInputBuilder;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.RoomTypeRateBuilder;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.RoomTypeInventoryBuilder;
+using FC4.HotelReservation.Reservations.Application.Commands.CreateReservation;
 
 namespace FC4.HotelReservation.IntegrationTests.Reservation;
 
 [Collection(nameof(WebApiFixture))]
-public class CreateReservationTest(WebApiFixture fixture) : IAsyncDisposable
+public class CreateReservationHandlerTest(WebApiFixture fixture) : IAsyncDisposable
 {
     private readonly HttpClient _client = fixture.CreateClient();
 
@@ -65,7 +65,7 @@ public class CreateReservationTest(WebApiFixture fixture) : IAsyncDisposable
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        var output = await response.Content.ReadFromJsonAsync<CreateReservationOutput>(fixture.JsonSettings);
+        var output = await response.Content.ReadFromJsonAsync<CreateReservationResult>(fixture.JsonSettings);
         output.Should().NotBeNull();
         output.Id.Should().NotBeEmpty();
 
