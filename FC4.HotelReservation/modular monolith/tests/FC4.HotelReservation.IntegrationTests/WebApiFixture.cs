@@ -16,6 +16,7 @@ public partial class WebApiFixture : WebApplicationFactory<Program>
     public PostgreSqlContainer PostgresDb { get; } =
         new PostgreSqlBuilder()
             .WithDatabase("hotel_reservation")
+            .WithImage("postgres:16")
             .Build();
 
     public JsonSerializerOptions JsonSettings { get; } = new()
