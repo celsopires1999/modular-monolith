@@ -52,7 +52,14 @@ public class Reservation : AggregateRoot
     {
         var reservation = new Reservation(Guid.NewGuid(), hotelId, roomTypeId, stayPeriod, guestId,
             roomQuantity, totalAmount, ReservationStatus.Pending, DateTime.UtcNow);
-        reservation.RaiseEvent(new ReservationCreatedEvent(reservation.Id, reservation.TotalAmount));
+        reservation.RaiseEvent(new ReservationCreatedEvent(
+            reservation.Id,
+            reservation.HotelId,
+            reservation.RoomTypeId,
+            reservation.StayPeriod,
+            reservation.GuestId, reservation.RoomQuantity,
+            reservation.TotalAmount
+            ));
         return reservation;
     }
 
@@ -62,7 +69,7 @@ public class Reservation : AggregateRoot
             throw new InvalidOperationException("Reservation is already cancelled or rejected");
 
         Status = ReservationStatus.Cancelled;
-        RaiseEvent(new ReservationCanceledEvent(Id, HotelId, RoomTypeId, StayPeriod, RoomQuantity));
+        RaiseEvent(new ReservationCanceledEvent(Id, HotelId, RoomTypeId, StayPeriod, RoomQuantity, Status));
     }
 
     public void Reject()
@@ -71,7 +78,7 @@ public class Reservation : AggregateRoot
             throw new InvalidOperationException("Can only reject pending reservations");
 
         Status = ReservationStatus.Rejected;
-        RaiseEvent(new ReservationCanceledEvent(Id, HotelId, RoomTypeId, StayPeriod, RoomQuantity));
+        RaiseEvent(new ReservationCanceledEvent(Id, HotelId, RoomTypeId, StayPeriod, RoomQuantity, Status));
     }
 
     public void MarkAsPaid()
@@ -80,6 +87,7 @@ public class Reservation : AggregateRoot
             throw new InvalidOperationException("Cannot mark cancelled or rejected reservation as paid");
 
         Status = ReservationStatus.Paid;
+        RaiseEvent(new ReservationPaidEvent(Id));
     }
 
     public void Refund()
@@ -88,5 +96,6 @@ public class Reservation : AggregateRoot
             throw new InvalidOperationException("Can only refund paid reservations");
 
         Status = ReservationStatus.Refunded;
+        RaiseEvent(new ReservationRefundedEvent(Id));
     }
 }
