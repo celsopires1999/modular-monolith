@@ -4,5 +4,5 @@ public interface IReservationDao
 {
     Task<IEnumerable<ReservationResult>> ListByGuestIdAsync(Guid guestId, CancellationToken cancellationToken);
     
-    // Task<ReservationResult?> GetByIdAsync(Guid reservationId, CancellationToken cancellationToken);
+    Task<ReservationResult?> GetByIdAsync(Guid reservationId, CancellationToken cancellationToken);
 }

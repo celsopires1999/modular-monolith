@@ -41,6 +41,42 @@ public class ReservationDao(IDbConnection connection) : IReservationDao
             dto.CreatedAt));
     }
 
+    public async Task<ReservationResult?> GetByIdAsync(Guid reservationId, CancellationToken cancellationToken)
+    {
+        const string sql = @"
+            SELECT 
+                id as Id,
+                hotel_id as HotelId,
+                room_type_id as RoomTypeId,
+                stay_start_date as StartDate,
+                stay_end_date as EndDate,
+                status as Status,
+                room_quantity as RoomQuantity,
+                total_amount as Amount,
+                total_currency as Currency,
+                created_at as CreatedAt
+            FROM reservations
+            WHERE id = @ReservationId";
+
+        var dto = await connection.QuerySingleOrDefaultAsync<ReservationOutputDto>(
+            sql, 
+            new { ReservationId = reservationId });
+
+        return dto is null
+            ? null
+            : new ReservationResult(
+                dto.Id,
+                dto.HotelId,
+                dto.RoomTypeId,
+                dto.StartDate,
+                dto.EndDate,
+                Enum.Parse<ReservationStatus>(dto.Status),
+                dto.RoomQuantity,
+                dto.Amount,
+                dto.Currency,
+                dto.CreatedAt);
+    }
+
     private record ReservationOutputDto(
         Guid Id,
         Guid HotelId,
