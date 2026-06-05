@@ -1,0 +1,13 @@
+###
+# @name createReservation
+POST http://localhost:5077/v1/reservations
+Content-Type: application/json
+
+{
+  "hotelId": "11111111-1111-1111-1111-111111111111",
+  "roomTypeId": "11111111-1111-1111-1111-111111111111",
+  "startDate": "2026-03-26",
+  "endDate": "2026-03-27",
+  "guestId": "11111111-1111-1111-1111-111111111111",
+  "roomQuantity": 1
+}
