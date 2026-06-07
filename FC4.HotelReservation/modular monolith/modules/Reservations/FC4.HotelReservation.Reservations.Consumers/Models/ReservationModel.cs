@@ -16,6 +16,9 @@ public class ReservationModel
     public Guid RoomTypeId { get; set; }
     
     [BsonRepresentation(BsonType.String)]
+    public string HotelName { get; set; } = string.Empty;
+
+    [BsonRepresentation(BsonType.String)]
     public Guid GuestId { get; set; }
     
     public DateTime StartDate { get; set; }
