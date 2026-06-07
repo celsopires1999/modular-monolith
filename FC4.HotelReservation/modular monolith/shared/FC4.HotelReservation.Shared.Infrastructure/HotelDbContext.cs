@@ -1,10 +1,11 @@
 using FC4.HotelReservation.Catalog.Domain.Entities;
 using FC4.HotelReservation.Guests.Domain.Entities;
-using FC4.HotelReservation.Shared.Infrastructure.Mappings;
 using FC4.HotelReservation.Payments.Domain.Entities;
 using FC4.HotelReservation.Reservations.Domain.Entities;
-using Microsoft.EntityFrameworkCore;
+using FC4.HotelReservation.Shared.Infrastructure.Mappings;
 using FC4.HotelReservation.Shared.Infrastructure.SeedData;
+using MassTransit;
+using Microsoft.EntityFrameworkCore;
 
 namespace FC4.HotelReservation.Shared.Infrastructure;
 
@@ -29,6 +30,10 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) : DbContex
         modelBuilder.ApplyConfiguration(new RoomTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RoomTypeInventoryConfiguration());
         modelBuilder.ApplyConfiguration(new RoomTypeRateConfiguration());
+
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
 
         // Seed data
         modelBuilder.SeedData();

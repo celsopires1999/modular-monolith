@@ -3,7 +3,6 @@ using FC4.HotelReservation.Catalog.Domain;
 using FC4.HotelReservation.Catalog.Infra;
 using FC4.HotelReservation.Guests.Application;
 using FC4.HotelReservation.Guests.Infra;
-using FC4.HotelReservation.Shared.Infrastructure;
 using FC4.HotelReservation.Payments.Application;
 using FC4.HotelReservation.Payments.Consumers;
 using FC4.HotelReservation.Payments.Infra;
@@ -11,6 +10,7 @@ using FC4.HotelReservation.Reservations.Adapters;
 using FC4.HotelReservation.Reservations.Application;
 using FC4.HotelReservation.Reservations.Consumers;
 using FC4.HotelReservation.Reservations.Infra.Data;
+using FC4.HotelReservation.Shared.Infrastructure;
 using FC4.HotelReservation.WebApi;
 using FC4.HotelReservation.WebApi.Endpoints;
 using MassTransit;
@@ -42,6 +42,20 @@ builder.Services
     })
     .AddMassTransit(configurator =>
     {
+        configurator
+            .AddEntityFrameworkOutbox<HotelDbContext>(o =>
+            {
+                o.UsePostgres();
+                o.UseBusOutbox();
+                o.QueryDelay = TimeSpan.FromSeconds(2);
+            });
+
+        configurator
+            .AddConfigureEndpointsCallback((context, name, cfg) =>
+            {
+                cfg.UseEntityFrameworkOutbox<HotelDbContext>(context);
+            });
+
         configurator
             .AddPaymentConsumers()
             .AddReservationConsumers()
