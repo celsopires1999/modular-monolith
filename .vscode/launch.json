@@ -5,13 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug HelloWorld.Api (5001)",
+            "name": "Debug FC4.HotelReservation.WebApi",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/HelloWorld.Api/bin/Debug/net8.0/HelloWorld.Api.dll",
+            "preLaunchTask": "build api",
+            "program": "${workspaceFolder}/FC4.HotelReservation/modular monolith/src/FC4.HotelReservation.WebApi/bin/Debug/net8.0/FC4.HotelReservation.WebApi.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/src/HelloWorld.Api",
+            "cwd": "${workspaceFolder}/FC4.HotelReservation/modular monolith/src/FC4.HotelReservation.WebApi",
             "stopAtEntry": false,
             "serverReadyAction": {
                 "action": "openExternally",
@@ -19,7 +19,7 @@
             },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development",
-                "ASPNETCORE_URLS": "http://localhost:5001"
+                "ASPNETCORE_URLS": "http://localhost:5077"
             }
         }
     ]

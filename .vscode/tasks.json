@@ -4,12 +4,12 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "build api",
             "type": "process",
             "command": "dotnet",
             "args": [
                 "build",
-                "${workspaceFolder}/HelloWorldSolution.sln"
+                "${workspaceFolder}/FC4.HotelReservation/modular monolith/src/FC4.HotelReservation.WebApi/FC4.HotelReservation.WebApi.csproj"
             ],
             "problemMatcher": "$msCompile",
             "group": {
