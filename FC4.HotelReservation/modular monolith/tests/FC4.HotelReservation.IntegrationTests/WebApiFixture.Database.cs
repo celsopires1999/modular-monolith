@@ -152,6 +152,31 @@ public partial class WebApiFixture
         return await dbContext.Payments.FirstOrDefaultAsync(p => p.ReservationId == reservationId);
     }
 
+    public async Task<Payments.Domain.Entities.Payment?> WaitForPaymentByReservationIdAsync(
+        Guid reservationId,
+        int timeoutMs = 15000,
+        int pollIntervalMs = 500)
+    {
+        var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        Payments.Domain.Entities.Payment? payment;
+        do
+        {
+            using var scope = Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
+            payment = await dbContext.Payments
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.ReservationId == reservationId);
+
+            if (payment is not null)
+                return payment;
+
+            await Task.Delay(pollIntervalMs);
+        }
+        while (DateTime.UtcNow < deadline);
+
+        return null;
+    }
+
     public async Task<List<RoomTypeInventory>> GetRoomTypeInventoriesAsync(Guid hotelId, Guid roomTypeId,
         DateRange period)
     {
