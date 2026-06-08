@@ -15,9 +15,16 @@ public static class ServiceCollectionExtensions
             .AddDbContext<HotelDbContext>((serviceProvider, options) =>
             {
                 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+
                 options.UseNpgsql(configuration.GetConnectionString("HotelReservationDb"));
-                options.EnableSensitiveDataLogging();
-                options.LogTo(Console.WriteLine, LogLevel.Information);
+
+                var efCoreLogLevel = configuration["Logging:LogLevel:EfCore"] ?? "Warning";
+                if (Enum.TryParse<LogLevel>(efCoreLogLevel, ignoreCase: true, out var logLevel)
+                    && logLevel <= LogLevel.Information)
+                {
+                    options.EnableSensitiveDataLogging();
+                    options.LogTo(Console.WriteLine, logLevel);
+                }
             });
     }
 }
