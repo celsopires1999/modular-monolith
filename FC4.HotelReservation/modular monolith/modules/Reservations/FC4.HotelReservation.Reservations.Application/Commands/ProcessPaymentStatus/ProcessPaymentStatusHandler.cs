@@ -5,7 +5,7 @@ namespace FC4.HotelReservation.Reservations.Application.Commands.ProcessPaymentS
 
 public class ProcessPaymentStatusHandler(
     IReservationRepository reservationRepository,
-    IUnitOfWork unitOfWork): IProcessPaymentStatusHandler
+    IUnitOfWork unitOfWork) : IProcessPaymentStatusHandler
 {
     public async Task Handle(ProcessPaymentStatusCommand request, CancellationToken cancellationToken)
     {

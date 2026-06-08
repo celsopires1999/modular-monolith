@@ -23,13 +23,13 @@ public class ListReservationsHandlerTest(WebApiFixture fixture) : IAsyncDisposab
         var otherGuest = await fixture.CreateGuestInDatabaseAsync();
         
         // Create reservations for the guest
-        var reservation1 = await fixture.CreateReservationInDatabaseAsync(
+        var reservation1 = await fixture.CreateReservationInMongoDbAsync(
             AReservation()
                 .WithGuestId(guest.Id)
                 .WithHotelId(hotel.Id)
                 .WithRoomTypeId(roomType.Id)
                 .Build());
-        var reservation2 = await fixture.CreateReservationInDatabaseAsync(
+        var reservation2 = await fixture.CreateReservationInMongoDbAsync(
             AReservation()
                 .WithGuestId(guest.Id)
                 .WithHotelId(hotel.Id)
@@ -37,7 +37,7 @@ public class ListReservationsHandlerTest(WebApiFixture fixture) : IAsyncDisposab
                 .Build());
         
         // Create reservation for other guest (should not be returned)
-        await fixture.CreateReservationInDatabaseAsync(
+        await fixture.CreateReservationInMongoDbAsync(
             AReservation()
                 .WithGuestId(otherGuest.Id)
                 .WithHotelId(hotel.Id)

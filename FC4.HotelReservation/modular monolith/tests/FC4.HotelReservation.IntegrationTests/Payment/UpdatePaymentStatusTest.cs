@@ -47,8 +47,7 @@ public class UpdatePaymentStatusTest(WebApiFixture fixture) : IAsyncDisposable
         updatedPayment.Should().NotBeNull();
         updatedPayment.Status.Should().Be(newPaymentStatus);
 
-        await Task.Delay(1000);
-        var updatedReservation = await fixture.GetReservationByIdAsync(reservation.Id);
+        var updatedReservation = await fixture.WaitForReservationStatusAsync(reservation.Id, expectedReservationStatus);
         updatedReservation.Should().NotBeNull();
         updatedReservation.Status.Should().Be(expectedReservationStatus);
     }
@@ -111,8 +110,7 @@ public class UpdatePaymentStatusTest(WebApiFixture fixture) : IAsyncDisposable
         updatedPayment.Should().NotBeNull();
         updatedPayment.Status.Should().Be(PaymentStatus.Failed);
 
-        await Task.Delay(1000);
-        var updatedReservation = await fixture.GetReservationByIdAsync(reservation.Id);
+        var updatedReservation = await fixture.WaitForReservationStatusAsync(reservation.Id, ReservationStatus.Rejected);
         updatedReservation.Should().NotBeNull();
         updatedReservation.Status.Should().Be(ReservationStatus.Rejected);
 
@@ -144,7 +142,7 @@ public class UpdatePaymentStatusTest(WebApiFixture fixture) : IAsyncDisposable
         updatedPayment.Should().NotBeNull();
         updatedPayment.Status.Should().Be(input.Status);
 
-        await Task.Delay(1000);
+        // Sem delay: o status da reserva não deve mudar para Processing
         var updatedReservation = await fixture.GetReservationByIdAsync(reservation.Id);
         updatedReservation.Should().NotBeNull();
         updatedReservation.Status.Should().Be(reservation.Status);

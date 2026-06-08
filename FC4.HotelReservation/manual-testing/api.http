@@ -6,8 +6,8 @@ Content-Type: application/json
 {
   "hotelId": "11111111-1111-1111-1111-111111111111",
   "roomTypeId": "11111111-1111-1111-1111-111111111111",
-  "startDate": "2026-06-07",
-  "endDate": "2026-06-08",
+  "startDate": "2026-06-08",
+  "endDate": "2026-06-09",
   "guestId": "11111111-1111-1111-1111-111111111111",
   "roomQuantity": 1
 }

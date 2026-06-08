@@ -1,10 +1,13 @@
 using FC4.HotelReservation.Catalog.Domain.Entities;
 using FC4.HotelReservation.Reservations.Domain.Entities;
+using FC4.HotelReservation.Reservations.Domain.Enums;
 using FC4.HotelReservation.Reservations.Domain.ValueObjects;
+using FC4.HotelReservation.Reservations.Infra.Data.Models;
 using FC4.HotelReservation.Shared.Infrastructure;
 using FC4.HotelReservation.Shared.Domain;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.HotelBuilder;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.RoomBuilder;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.RoomTypeBuilder;
@@ -31,6 +34,9 @@ public partial class WebApiFixture
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM room_types");
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM hotels");
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM guests");
+
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        await database.DropCollectionAsync("reservations");
     }
     
     private async Task<T> AddToDatabaseAsync<T>(T entity) where T : Entity
@@ -85,6 +91,34 @@ public partial class WebApiFixture
                 .Build();
         }
         return await AddToDatabaseAsync(reservation);
+    }
+
+    public async Task<Reservations.Domain.Entities.Reservation> CreateReservationInMongoDbAsync(
+        Reservations.Domain.Entities.Reservation reservation)
+    {
+        using var scope = Services.CreateScope();
+        var database = scope.ServiceProvider.GetRequiredService<IMongoDatabase>();
+        var collection = database.GetCollection<ReservationModel>("reservations");
+
+        var model = new ReservationModel
+        {
+            ReservationId = reservation.Id,
+            HotelId = reservation.HotelId,
+            RoomTypeId = reservation.RoomTypeId,
+            GuestId = reservation.GuestId,
+            StartDate = reservation.StayPeriod.StartDate,
+            EndDate = reservation.StayPeriod.EndDate,
+            RoomQuantity = reservation.RoomQuantity,
+            Amount = reservation.TotalAmount.Value,
+            Currency = reservation.TotalAmount.Currency,
+            Status = reservation.Status.ToString("G"),
+            CreatedAt = reservation.CreatedAt,
+            UpdatedAt = DateTime.UtcNow,
+            HotelName = ""
+        };
+
+        await collection.InsertOneAsync(model);
+        return reservation;
     }
 
     public async Task<Payments.Domain.Entities.Payment> CreatePaymentInDatabaseAsync(Payments.Domain.Entities.Payment? payment = null)
@@ -186,5 +220,34 @@ public partial class WebApiFixture
             .FirstOrDefaultAsync(i => i.HotelId == hotelId &&
                                       i.RoomTypeId == roomTypeId &&
                                       i.Date == startDate);
+    }
+
+    public async Task<Reservations.Domain.Entities.Reservation?> WaitForReservationStatusAsync(
+        Guid reservationId,
+        ReservationStatus expectedStatus,
+        int timeoutMs = 15000,
+        int pollIntervalMs = 500)
+    {
+        var deadline = DateTime.UtcNow.AddMilliseconds(timeoutMs);
+        Reservations.Domain.Entities.Reservation? reservation;
+        do
+        {
+            using var scope = Services.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
+            reservation = await dbContext.Reservations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Id == reservationId);
+
+            if (reservation?.Status == expectedStatus)
+                return reservation;
+
+            await Task.Delay(pollIntervalMs);
+        } while (DateTime.UtcNow < deadline);
+
+        using var finalScope = Services.CreateScope();
+        var finalDbContext = finalScope.ServiceProvider.GetRequiredService<HotelDbContext>();
+        return await finalDbContext.Reservations
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r => r.Id == reservationId);
     }
 }

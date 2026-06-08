@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using FC4.HotelReservation.Reservations.Application.Queries.Common;
 using FC4.HotelReservation.Reservations.Domain.Enums;
 using FluentAssertions;
+using static FC4.HotelReservation.IntegrationTests.DataBuilders.ReservationBuilder;
 
 namespace FC4.HotelReservation.IntegrationTests.Reservation;
 
@@ -15,7 +16,8 @@ public class GetReservationHandlerTest(WebApiFixture fixture) : IAsyncDisposable
     public async Task GetReservationById_WithValidId_ShouldReturnReservation()
     {
         // Arrange
-        var reservation = await fixture.CreateReservationInDatabaseAsync();
+        var reservation = await fixture.CreateReservationInMongoDbAsync(
+            AReservation().Build());
 
         // Act
         var response = await _client.GetAsync($"/v1/reservations/{reservation.Id}");

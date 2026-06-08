@@ -35,11 +35,6 @@ builder.Services
     .AddCatalogRepositories()
     .AddReservationsMongoDb(builder.Configuration)
     .AddMongoDbReadDatabase()
-    .AddPostgresMigrationHostedService(options =>
-    {
-        options.CreateDatabase = false;
-        options.CreateInfrastructure = true;
-    })
     .AddMassTransit(configurator =>
     {
         configurator
@@ -58,18 +53,39 @@ builder.Services
 
         configurator
             .AddPaymentConsumers()
-            .AddReservationConsumers()
-            .UsingPostgres((context, cfg) =>
+            .AddReservationConsumers();
+
+        if (builder.Environment.IsEnvironment("IntegrationTests"))
+        {
+            configurator.UsingInMemory((context, cfg) =>
+            {
+                cfg.ConfigureEndpoints(context);
+            });
+        }
+        else
+        {
+            configurator.UsingPostgres((context, cfg) =>
             {
                 cfg.UseSqlMessageScheduler();
                 cfg.ConfigureEndpoints(context);
             });
-    })
-    .AddOptions<SqlTransportOptions>()
-    .Configure(options =>
-    {
-        options.ConnectionString = builder.Configuration.GetConnectionString("HotelReservationDb");
+        }
     });
+
+if (!builder.Environment.IsEnvironment("IntegrationTests"))
+{
+    builder.Services
+        .AddPostgresMigrationHostedService(options =>
+        {
+            options.CreateDatabase = false;
+            options.CreateInfrastructure = true;
+        })
+        .AddOptions<SqlTransportOptions>()
+        .Configure(options =>
+        {
+            options.ConnectionString = builder.Configuration.GetConnectionString("HotelReservationDb");
+        });
+}
 
 var app = builder.Build();
 
