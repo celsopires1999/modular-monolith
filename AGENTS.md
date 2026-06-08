@@ -35,6 +35,24 @@
 - `dotnet build src/FC4.HotelReservation.WebApi` — build the API
 - `dotnet test tests/FC4.HotelReservation.IntegrationTests` — integration tests (uses Testcontainers, no external dependencies)
 
+## Just commands (`just`)
+| Command | Description |
+|---|---|
+| `just` | List available recipes |
+| `just build` | Build the WebApi |
+| `just api` | Run the API (Swagger at `/swagger`) |
+| `just add-migration <name>` | Create a new EF Core migration |
+| `just migrate` | Apply pending migrations |
+| `just rollback` | Revert all migrations |
+| `just rollback-to <name>` | Revert to a specific migration |
+| `just remove-migration` | Remove the last migration |
+| `just list-migrations` | List all migrations |
+| `just seed` | Seed PostgreSQL + MongoDB |
+| `just seed-pg` | Seed only PostgreSQL |
+| `just seed-mongo` | Seed only MongoDB |
+| `just test` | Run integration tests |
+| `just setup` | `migrate` + `seed`
+
 ## Architecture notes
 - **CQRS**: writes → PostgreSQL via EF Core + UnitOfWork; reads → MongoDB via driver
 - **Messaging**: MassTransit with PostgreSQL transport (outbox pattern)
