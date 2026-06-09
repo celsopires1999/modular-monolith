@@ -6,8 +6,8 @@ namespace FC4.HotelReservation.Catalog.Domain.Entities;
 
 public class Hotel : AggregateRoot
 {
-    public string Name { get; private set; }
-    public Address Address { get; private set; }
+    public string Name { get; private set; } = null!;
+    public Address Address { get; private set; } = null!;
     
     private Hotel() { } // For EF Core
     public Hotel(Guid id, string name, Address address) : base(id)

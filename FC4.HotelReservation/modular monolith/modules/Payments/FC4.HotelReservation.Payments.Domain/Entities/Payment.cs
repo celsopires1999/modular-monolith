@@ -9,7 +9,7 @@ namespace FC4.HotelReservation.Payments.Domain.Entities;
 public class Payment : AggregateRoot
 {
     public Guid ReservationId { get; }
-    public Money Amount { get; }
+    public Money Amount { get; } = null!;
     public PaymentStatus Status { get; private set; }
     public DateTime ProcessedAt { get; private set; }
     public string? TransactionId { get; private set; }

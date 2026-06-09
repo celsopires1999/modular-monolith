@@ -5,7 +5,7 @@ namespace FC4.HotelReservation.Catalog.Domain.Entities;
 
 public class RoomType : AggregateRoot
 {
-    public string Description { get; }
+    public string Description { get; } = null!;
     
     private RoomType() { } // For EF Core
     

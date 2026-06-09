@@ -10,11 +10,11 @@ public class Reservation : EventSourced
 {
     public Guid HotelId { get; private set; }
     public Guid RoomTypeId { get; private set; }
-    public DateRange StayPeriod { get; private set; }
+    public DateRange StayPeriod { get; private set; } = null!;
     public ReservationStatus Status { get; private set; }
     public Guid GuestId { get; private set; }
     public int RoomQuantity { get; private set; }
-    public Money TotalAmount { get; private set; }
+    public Money TotalAmount { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
 
     private Reservation()

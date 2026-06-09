@@ -6,8 +6,8 @@ namespace FC4.HotelReservation.Reservations.Domain.Entities;
 
 public class GuestInfo : AggregateRoot
 {
-    public Email Email { get; private set; }
-    public string FullName { get; private set; }
+    public Email Email { get; private set; } = null!;
+    public string FullName { get; private set; } = null!;
     
     private GuestInfo() { } // For EF Core
     

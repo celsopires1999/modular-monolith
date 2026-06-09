@@ -9,7 +9,7 @@ public class RoomTypeRate : AggregateRoot
     public Guid HotelId { get; private set; }
     public Guid RoomTypeId { get; private set; }
     public DateTime Date { get; private set; }
-    public Money Rate { get; private set; }
+    public Money Rate { get; private set; } = null!;
 
     private RoomTypeRate() { } // For EF Core
     
