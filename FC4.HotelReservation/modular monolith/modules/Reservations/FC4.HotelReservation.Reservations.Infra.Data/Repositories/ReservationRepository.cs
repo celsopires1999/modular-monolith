@@ -8,6 +8,6 @@ public class ReservationRepository(EventStoreRepository<Reservation> eventStore)
 {
     public async Task<Reservation?> GetByIdAsync(Guid reservationId, CancellationToken cancellationToken)
     {
-        return await eventStore.LoadFromEventAsync(reservationId, cancellationToken);
+        return await eventStore.LoadFromEventsAsync(reservationId, cancellationToken);
     }
 }

@@ -10,38 +10,44 @@ namespace FC4.HotelReservation.Shared.Infrastructure;
 
 public class UnitOfWork(
     HotelDbContext dbContext,
-    IPublisher publisher
-    ) : IUnitOfWork
+    IPublisher publisher) : IUnitOfWork
 {
     private readonly IDbContextTransaction _transaction = dbContext.Database.BeginTransaction();
     private readonly List<AggregateRoot> _registeredAggregates = [];
+
     public void Register(AggregateRoot aggregateRoot)
     {
         if (!_registeredAggregates.Contains(aggregateRoot))
             _registeredAggregates.Add(aggregateRoot);
     }
+
     public async Task CommitAsync(CancellationToken cancellationToken)
     {
-        var aggregateRoots = dbContext
-            .ChangeTracker
-            .Entries<AggregateRoot>()
-            .Where(entry => entry.Entity.Events.Count > 0)
-            .Select(entry => entry.Entity)
-            .ToList();
-
-        foreach (var aggregateRoot in aggregateRoots)
+        List<AggregateRoot> aggregateRoots;
+        do
         {
-            var events = aggregateRoot.Events.ToList();
-            foreach (var @event in events)
+            aggregateRoots = dbContext
+                .ChangeTracker
+                .Entries<AggregateRoot>()
+                .Select(entry => entry.Entity)
+                .Union(_registeredAggregates)
+                .Where(entity => entity.Events.Count > 0)
+                .ToList();
+
+            foreach (var aggregateRoot in aggregateRoots)
             {
-                if (aggregateRoot is EventSourced)
+                foreach (var @event in aggregateRoot.Events.ToList())
                 {
-                    dbContext.EventStore.Add(EventEntry.FromDomainEvent(@event));
+                    if (aggregateRoot is EventSourced)
+                    {
+                        dbContext.EventStore.Add(EventEntry.FromDomainEvent(@event));
+                    }
+
+                    await publisher.Publish((dynamic)@event, cancellationToken);
+                    aggregateRoot.RemoveEvent(@event);
                 }
-                await publisher.Publish((object)@event, cancellationToken);
-                aggregateRoot.RemoveEvent(@event);
             }
-        }
+        } while (aggregateRoots.Any());
 
         try
         {
@@ -50,8 +56,7 @@ public class UnitOfWork(
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            
-            throw new ConflictException("A concurrency conflict occurred while saving changes to the database.", ex);
+            throw new ConflictException("Concurrency conflict occurred during save operation", ex);
         }
         finally
         {

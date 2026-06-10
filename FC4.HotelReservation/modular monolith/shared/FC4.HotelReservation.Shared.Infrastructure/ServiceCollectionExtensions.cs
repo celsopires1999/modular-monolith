@@ -1,4 +1,5 @@
 using FC4.HotelReservation.Shared.Application;
+using FC4.HotelReservation.Shared.Infrastructure.EventStore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,6 +13,9 @@ public static class ServiceCollectionExtensions
     {
         return services
             .AddScoped<IUnitOfWork, UnitOfWork>()
+            .AddScoped(typeof(EventStoreRepository<>))
+            // .AddScoped<EventStoreRepository<Reservation>>()
+            // .AddScoped<EventStoreRepository<RoomTypeInventory>>()
             .AddDbContext<HotelDbContext>((serviceProvider, options) =>
             {
                 var configuration = serviceProvider.GetRequiredService<IConfiguration>();

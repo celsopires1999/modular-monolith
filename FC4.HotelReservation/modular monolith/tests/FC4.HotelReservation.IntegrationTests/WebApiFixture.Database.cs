@@ -16,6 +16,7 @@ using static FC4.HotelReservation.IntegrationTests.DataBuilders.PaymentBuilder;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.GuestBuilder;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.RoomTypeRateBuilder;
 using static FC4.HotelReservation.IntegrationTests.DataBuilders.RoomTypeInventoryBuilder;
+using FC4.HotelReservation.Shared.Infrastructure.Models;
 
 namespace FC4.HotelReservation.IntegrationTests;
 
@@ -29,7 +30,7 @@ public partial class WebApiFixture
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM payments");
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM room_type_rates");
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM room_type_inventories");
-        await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM reservations");
+        await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM room_type_inventory_projections");
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM rooms");
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM room_types");
         await dbContext.Database.ExecuteSqlRawAsync("DELETE FROM hotels");
@@ -177,14 +178,14 @@ public partial class WebApiFixture
         return null;
     }
 
-    public async Task<List<RoomTypeInventory>> GetRoomTypeInventoriesAsync(Guid hotelId, Guid roomTypeId,
+    public async Task<List<RoomTypeInventoryProjection>> GetRoomTypeInventoriesAsync(Guid hotelId, Guid roomTypeId,
         DateRange period)
     {
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
 
         var dates = period.GetDates().ToList();
-        return await dbContext.RoomTypeInventories
+        return await dbContext.RoomTypeInventoryProjections
             .Where(i => i.HotelId == hotelId &&
                         i.RoomTypeId == roomTypeId &&
                         dates.Contains(i.Date))

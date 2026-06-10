@@ -7,7 +7,7 @@ namespace FC4.HotelReservation.Shared.Infrastructure.EventStore;
 public class EventStoreRepository<T> (HotelDbContext dbContext,
     IUnitOfWork unitOfWork) where T : EventSourced
 {
-    public async Task<T?> LoadFromEventAsync(Guid aggregateId, CancellationToken cancellationToken)
+    public async Task<T?> LoadFromEventsAsync(Guid aggregateId, CancellationToken cancellationToken)
     {
         var entries = await dbContext.EventStore
             .Where(e => e.AggregateId == aggregateId)
