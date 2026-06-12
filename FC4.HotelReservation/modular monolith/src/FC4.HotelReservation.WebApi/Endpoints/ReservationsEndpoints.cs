@@ -16,9 +16,9 @@ public static class ReservationsEndpoints
         group.MapGet("/{id:guid}", async (Guid id, IMediator mediator) =>
             TypedResults.Ok(await mediator.Send(new GetReservationQuery(id))));
 
-        group.MapPost("/", async (CreateReservationCommand input, IMediator mediator) =>
+        group.MapPost("/", async (CreateReservationCommand command, IMediator mediator) =>
         {
-            var output = await mediator.Send(input);
+            var output = await mediator.Send(command);
             return TypedResults.Created($"/reservations/{output.Id}", output);
         });
 
