@@ -1,3 +1,4 @@
+using FC4.HotelReservation.Reservations.Domain.Entities;
 using FC4.HotelReservation.Shared.Application;
 using FC4.HotelReservation.Shared.Infrastructure.EventStore;
 using Microsoft.EntityFrameworkCore;
@@ -13,9 +14,9 @@ public static class ServiceCollectionExtensions
     {
         return services
             .AddScoped<IUnitOfWork, UnitOfWork>()
-            .AddScoped(typeof(EventStoreRepository<>))
-            // .AddScoped<EventStoreRepository<Reservation>>()
-            // .AddScoped<EventStoreRepository<RoomTypeInventory>>()
+            // .AddScoped(typeof(EventStoreRepository<>)) // This line is commented to remember that is is also an option to register the generic repository without specifying the type parameter, allowing it to be injected for any entity type.
+            .AddScoped<EventStoreRepository<Reservation>>()
+            .AddScoped<EventStoreRepository<RoomTypeInventory>>()
             .AddDbContext<HotelDbContext>((serviceProvider, options) =>
             {
                 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
