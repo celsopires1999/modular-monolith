@@ -1,7 +1,10 @@
 SELECT * from room_type_inventory;
 
-SELECT * from payments WHERE reservation_id = '812ce896-95db-4bda-afb2-ae4885b07b44';
+SELECT id FROM payments ORDER BY processed_at DESC LIMIT 1;
+
+SELECT * FROM payments ORDER BY processed_at;
 
 SELECT * from event_store ORDER BY occurred_on;
 
-SELECT * from reservations WHERE id = 'e8aa9e8b-81fd-4696-8555-2afbdaa68f70';
+SELECT * from event_store WHERE aggregate_id = '634a7492-24c9-42f7-b5c5-b7d62a944452' ORDER BY occurred_on;
+

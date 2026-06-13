@@ -672,6 +672,8 @@ namespace FC4.HotelReservation.Shared.Infrastructure.Migrations
                 table: "room_type_inventory",
                 column: "room_type_id");
 
+            migrationBuilder.Sql("DELETE FROM payments");
+            
             migrationBuilder.AddForeignKey(
                 name: "fk_payments_reservations",
                 table: "payments",

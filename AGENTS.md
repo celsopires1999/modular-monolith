@@ -2,7 +2,11 @@
 
 ## Setup
 - `docker compose up -d` at the repo root starts the app + postgres (5432) + mongodb (27017) + mongo-express (8082)
-- The dev container has dotnet-ef pre-installed and PATH configured
+- Dev container config in `.devcontainer/` — VS Code opens at `/home/developer/app`, with extensions (C#, REST Client, GitLens, etc.)
+- `global.json` at repo root pins .NET SDK to `8.0.421` (`rollForward: latestPatch`)
+- `Dockerfile.dev` builds the dev container; `Dockerfile.prd` is a template for production
+- `docker-compose.override.yml` sets `USER_UID`/`GID` (see `docker-compose.override.example.yml`)
+- The dev container has `dotnet-ef` pre-installed and PATH configured
 - The API runs at `http://localhost:5077`, Swagger at `/swagger`
 
 ## Working directory
@@ -12,6 +16,7 @@
 ## Database
 - **PostgreSQL** (write, EF Core) — connection string: `Host=postgres;...` (works only inside the Docker network)
 - **MongoDB** (read) — collections: `inventory`, `reservations` in `hotel_reservation` DB
+  - Indexes created at container startup via `FC4.HotelReservation/sandbox/mongo-init/init-mongo.js`
 
 ## EF Core Migrations
 - Migrations project: `shared/FC4.HotelReservation.Shared.Infrastructure`
@@ -23,7 +28,6 @@
   ```
 
 ## Seed data
-- `./update-db.sh` inside the container runs migrations + seed (PostgreSQL only via EF Core)
 - **SeedTool** (`tools/FC4.HotelReservation.SeedTool`) — CLI that seeds **PostgreSQL + MongoDB** and clears existing data
   - `--postgres` → only PostgreSQL | `--mongodb` → only MongoDB | `--all` (default) → both
   - Data: 1 hotel, 1 room type, 1 guest (GUID `11111111-...`), 60 days of inventory/rates
@@ -58,9 +62,13 @@
 - **Messaging**: MassTransit with PostgreSQL transport (outbox pattern)
 - **MediatR**: handlers in `modules/*/Application/UseCases/[Entity]/[Action]/`
 - **Minimal APIs**: endpoints in `src/FC4.HotelReservation.WebApi/Endpoints/`
-- **4 modules**: Catalog, Guests, Payments, Reservations — each with Domain/Application/Infra.Data
-- **Shared layer**: Shared.Domain (Entity, AggregateRoot, DomainEvent), Shared.Application (IUnitOfWork, exceptions), Shared.Infrastructure (EF Core DbContext, UnitOfWork, migrations)
+- **4 modules**: Catalog, Guests, Payments, Reservations
+  - Catalog + Guests: Domain/Application/Infra.Data
+  - Payments: Domain, Application, Infra.Data, **Consumers**, **Events**
+  - Reservations: Domain, Application, Infra.Data, **Adapters**, **Consumers**, **Events**
+- **Shared layer**: Shared.Domain (Entity, AggregateRoot, DomainEvent, EventSourced), Shared.Application (IUnitOfWork, exceptions), Shared.Infrastructure (EF Core DbContext, UnitOfWork, migrations, EventStore)
 - **Versioning**: `IVersioned` for optimistic concurrency on entities like RoomTypeInventory
+- **EventStore**: `EventSourced` base class (extends `AggregateRoot`) + `EventStoreRepository<T>` in Shared.Infrastructure.EventStore persisted to `event_store` table. The table was later removed via migration `RemoveEventSourcedTables`; code remains but is not actively used.
 
 ## HTTP errors
 | Exception | Status |
