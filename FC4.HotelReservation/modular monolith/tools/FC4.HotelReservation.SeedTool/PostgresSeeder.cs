@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FC4.HotelReservation.Shared.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,9 +17,12 @@ public class PostgresSeeder(HotelDbContext context)
     {
         await context.Database.ExecuteSqlRawAsync("""
             DELETE FROM room_type_rates;
-            DELETE FROM room_type_inventory;
+            DELETE FROM room_type_inventory_projections;
+            DELETE FROM event_store;
+            DELETE FROM "OutboxMessage";
+            DELETE FROM "InboxState";
+            DELETE FROM "OutboxState";
             DELETE FROM rooms;
-            DELETE FROM reservations;
             DELETE FROM payments;
             DELETE FROM guests;
             DELETE FROM room_types;
@@ -32,6 +36,7 @@ public class PostgresSeeder(HotelDbContext context)
         var roomTypeId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var guestId = Guid.Parse("11111111-1111-1111-1111-111111111111");
         var startDate = DateTime.UtcNow.Date;
+        var occurredOn = DateTime.UtcNow;
 
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
@@ -53,9 +58,9 @@ public class PostgresSeeder(HotelDbContext context)
         for (int dayOffset = 0; dayOffset < 60; dayOffset++)
         {
             var currentDate = startDate.AddDays(dayOffset);
-
             var inventoryId = new Guid($"44444444-4444-4444-4444-{(dayOffset + 1):D12}");
             var rateId = new Guid($"11111111-1111-1111-1111-{(dayOffset + 1):D12}");
+            var eventId = new Guid($"55555555-5555-5555-5555-{(dayOffset + 1):D12}");
 
             var rateAmount = 150.00m;
             if (currentDate.DayOfWeek is DayOfWeek.Friday or DayOfWeek.Saturday)
@@ -64,9 +69,27 @@ public class PostgresSeeder(HotelDbContext context)
             }
 
             await context.Database.ExecuteSqlRawAsync("""
-                INSERT INTO room_type_inventory (id, room_type_id, hotel_id, date, total_inventory, total_reserved, version)
-                VALUES ({0}, {1}, {2}, {3}, 10, 0, 1);
-                """, [inventoryId, roomTypeId, hotelId, currentDate], cancellationToken);
+                INSERT INTO room_type_inventory_projections (id, hotel_id, room_type_id, date)
+                VALUES ({0}, {1}, {2}, {3});
+                """, [inventoryId, hotelId, roomTypeId, currentDate], cancellationToken);
+
+            var eventData = JsonSerializer.Serialize(new
+            {
+                InventoryId = inventoryId,
+                HotelId = hotelId,
+                RoomTypeId = roomTypeId,
+                Date = currentDate,
+                TotalInventory = 10,
+                EventId = eventId,
+                AggregateId = inventoryId,
+                AggregateVersion = 0,
+                OccuredOn = occurredOn
+            });
+
+            await context.Database.ExecuteSqlRawAsync("""
+                INSERT INTO event_store (event_id, aggregate_id, aggregate_version, event_data, event_type, occurred_on)
+                VALUES ({0}, {1}, 0, {2}, 'RoomTypeInventoryCreatedEvent', {3});
+                """, [eventId, inventoryId, eventData, occurredOn], cancellationToken);
 
             await context.Database.ExecuteSqlRawAsync("""
                 INSERT INTO room_type_rates (id, room_type_id, hotel_id, date, rate_amount, rate_currency)

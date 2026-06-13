@@ -57,8 +57,10 @@ if (mode is "postgres" or "all")
 if (mode is "mongodb" or "all")
 {
     Console.WriteLine("Seeding MongoDB...");
+    using var scope = host.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<HotelDbContext>();
     var database = host.Services.GetRequiredService<IMongoDatabase>();
-    var mongoSeeder = new MongoSeeder(database);
+    var mongoSeeder = new MongoSeeder(dbContext, database);
     await mongoSeeder.SeedAsync();
     Console.WriteLine("MongoDB seeded successfully.");
 }
