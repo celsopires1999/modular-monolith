@@ -1,6 +1,7 @@
 using FC4.HotelReservation.Catalog.Domain.Entities;
 using FC4.HotelReservation.Guests.Domain.Entities;
 using FC4.HotelReservation.Payments.Domain.Entities;
+using FC4.HotelReservation.Shared.Domain;
 using FC4.HotelReservation.Shared.Infrastructure.Mappings;
 using FC4.HotelReservation.Shared.Infrastructure.Models;
 using FC4.HotelReservation.Shared.Infrastructure.SeedData;
@@ -22,12 +23,14 @@ public class HotelDbContext(DbContextOptions<HotelDbContext> options) : DbContex
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Ignore<DomainEvent>();
         modelBuilder.ApplyConfiguration(new GuestConfiguration());
         modelBuilder.ApplyConfiguration(new HotelConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentConfiguration());
         modelBuilder.ApplyConfiguration(new RoomConfiguration());
         modelBuilder.ApplyConfiguration(new RoomTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RoomTypeInventoryProjectionConfiguration());
+        modelBuilder.ApplyConfiguration(new ReservationConfiguration());
         modelBuilder.ApplyConfiguration(new RoomTypeRateConfiguration());
         modelBuilder.ApplyConfiguration(new EventEntryConfiguration());
         
