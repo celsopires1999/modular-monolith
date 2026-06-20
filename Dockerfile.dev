@@ -39,6 +39,9 @@ RUN groupadd --gid $USER_GID developer && \
     groupadd -f -g ${DOCKER_GROUP_ID} docker && \
     usermod -aG docker developer
 
+RUN mkdir -p /home/developer/.vscode-server && \
+    chown -R developer:developer /home/developer/.vscode-server
+
 USER developer
 
 WORKDIR /home/developer/app
